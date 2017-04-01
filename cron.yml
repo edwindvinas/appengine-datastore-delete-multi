@@ -1,0 +1,10 @@
+cron:
+# For testing, lets execute fake activity logs every 5 minues
+#- description: Hourly activity logs insert
+#  url: /cron?f=hourly_monitor_entity
+#  schedule: every 5 minutes
+
+# For testing, lets execute daily to hourly
+#- description: Daily delete jobs
+#  url: /cron?f=daily_delete_old_act_logs
+#  schedule: every 1 hours
