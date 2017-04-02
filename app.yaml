@@ -1,0 +1,17 @@
+application: galileo2
+version: 1
+runtime: go
+api_version: go1
+
+handlers:
+- url: /
+  script: _go_app
+
+- url: /cron
+  script: _go_app
+  login: admin
+
+- url: /helper
+  script: _go_app
+  login: admin
+
