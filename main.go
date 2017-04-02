@@ -82,6 +82,80 @@ func handleCron(w http.ResponseWriter, r *http.Request) {
 		case "daily_delete_old_act_logs":
 			//simulate daily logs deletion
 			//to follow
+			//same as in the debug code//
+			//--------------------------
+			c.Infof("[CRON] Deleting all old records!<hr>")
+			
+			//while old activity logs exists
+			recCount := 1
+			attempt := 0
+			max_reached := false
+			
+			for recCount > 0 && max_reached == false {
+				
+				//Target records older than 7 days from now
+				t := time.Now().Local()
+				TIMESTAMP := t.AddDate(0,0,-7)	
+				
+				q := datastore.NewQuery("ActivityLog").Filter("Timestamp <=", TIMESTAMP)
+				recCount,_ = q.Count(c)
+				attempt++
+				//temp
+				if attempt > 5 {
+					c.Infof("break: exceeded max processes")
+					recCount = 0
+				}
+				
+				c.Infof("LOOP [%v] -=> saw [%v] old records<br>", attempt, recCount)		
+				
+				//Deleting records that are 7 days older
+				q = datastore.NewQuery("ActivityLog").
+									 Filter("Timestamp <= ", TIMESTAMP).
+									 KeysOnly()
+									 
+				keys, err := q.GetAll(c, nil)
+				if err != nil {
+					panic(err)
+				}
+				if err != nil {
+					fmt.Fprintf(w, "Error: %v<br>", err)
+					return
+				}	
+
+				//Each key is like below
+				///ActivityLog,ProductOrigin/ActivityLog,6342962321555456
+				//Trigger process to delete these records
+				
+				delChan := make(chan bool)
+				goRoutine := 0
+				
+				for i := 0; i < len(keys); i += REC_PER_DEL_JOB {
+					end := i + REC_PER_DEL_JOB
+
+					if end > len(keys) {
+						end = len(keys)
+					}
+					
+					goRoutine++
+					//Delete each chunk
+					c.Infof("[GO-ROUTINE]# %v<br>", goRoutine)
+					
+					//run batch multidelete via goroutine
+					go deleteBatchMulti(c,delChan,keys[i:end])
+					<-delChan					
+					if goRoutine > MAX_JOBS_TO_BE_RUN  {
+						//dont run so much taskqueue jobs
+						c.Infof("MAX_JOBS_TO_BE_RUN!")
+						max_reached = true
+						break
+					}
+					
+				}
+				
+			}
+			if attempt >= 1 {
+				c.Infof("<hr>LOOP TOTAL: %v<br>", attempt)
+			}
 
 		
 		default:

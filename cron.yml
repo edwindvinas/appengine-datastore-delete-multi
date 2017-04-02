@@ -5,6 +5,7 @@ cron:
 #  schedule: every 5 minutes
 
 # For testing, lets execute daily to hourly
-#- description: Daily delete jobs
-#  url: /cron?f=daily_delete_old_act_logs
-#  schedule: every 1 hours
+- description: Daily delete jobs
+  url: /cron?f=daily_delete_old_act_logs
+  schedule: every 1 hours
+#  schedule: every 5 minutes
